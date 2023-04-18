@@ -6,13 +6,12 @@ on:
       - master
   workflow_dispatch:
 
-env:
-  PACKAGE_NAME: livepeer
-  PACKAGE_VERSION: ${{ steps.get_tag.outputs.tag_name }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PACKAGE_NAME: livepeer
+      PACKAGE_VERSION: ${{ steps.get_tag.outputs.tag_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -49,4 +48,3 @@ jobs:
           name: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
           label: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
           mime_type: application/octet-stream
-
