@@ -25,23 +25,26 @@ jobs:
           sudo apt-get install -y build-essential debhelper fakeroot git
       - name: Create changelog entry
         run: |
+          export DEBEMAIL="ci@raf.sundara.tv"
+          export DEBFULLNAME="GITHUB ACTIONS BOT"
           git fetch --tags
-          TAG=$(git describe --abbrev=0 --tags)
-          git log --pretty=format:"%h %s" $TAG..HEAD > debian/changelog
-          sed -i "1s/^/livepeer (${TAG#v}-1) unstable; urgency=medium\n\n/" debian/changelog
-          echo -e "\n -- GITHUB ACTIONS BOT <ci@raf.sundara.tv>  $(date -R)\n" >> debian/changelog
-        - name: Build Debian Package
-          run: |
-            dpkg-buildpackage -b -us -uc
-        - name: Upload package to GitHub releases
-          uses: actions/upload-release-asset@v1
-          with:
-            asset_path: |
-              ../${PACKAGE_NAME}_*.deb
-              ../${PACKAGE_NAME}_*.deb.asc
-              ../${PACKAGE_NAME}_*.dsc
-              ../${PACKAGE_NAME}_*.tar.xz
-              ../${PACKAGE_NAME}_*.buildinfo
-            name: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
-            label: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
-            mime_type: application/octet-stream
+          PREV_TAG=$(git describe --tags --abbrev=0)
+          NEXT_TAG=$(echo $PREV_TAG | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+          debchange --newversion $NEXT_TAG --distribution unstable "New upstream release."
+      - name: Build Debian Package
+        run: |
+          dpkg-buildpackage -b -us -uc -aamd64
+        env:
+          DEB_BUILD_OPTIONS: "nocheck"
+      - name: Upload package to GitHub releases
+        uses: actions/upload-release-asset@v1
+        with:
+          asset_path: |
+            ../${PACKAGE_NAME}_*.deb
+            ../${PACKAGE_NAME}_*.deb.asc
+            ../${PACKAGE_NAME}_*.dsc
+            ../${PACKAGE_NAME}_*.tar.xz
+            ../${PACKAGE_NAME}_*.buildinfo
+          name: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
+          label: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
+          mime_type: application/octet-stream
