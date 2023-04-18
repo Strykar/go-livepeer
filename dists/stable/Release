@@ -1,0 +1,13 @@
+Origin: Livepeer
+Label: Livepeer
+Suite: stable
+Version: 1.0
+Codename: livepeer
+Date: Fri, 01 Jan 2023 00:00:00 UTC
+Architectures: amd64
+Components: main
+Description: Livepeer Debian package repository
+SHA256:
+ <hash> <size> main/binary-amd64/Packages
+ 547ef0583fed31f18b601107e0e2d28b672649c9a0fd95abb1684e48c5cc5de4 19527106 sha256sums.txt
+ 1b0a1733bbb95f82a7e12389bfa5da5743d17a77bb287f2c482b98db08c3ae2de2a369e5cff963c7fec520718908a8afd3bf450e158e3594e854e134ee3629d5 19527106 sha512sums.txt
