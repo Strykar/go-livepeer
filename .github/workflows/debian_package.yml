@@ -1,54 +1,43 @@
-name: Build Debian Package
-  
+name: Release
+
 on:
   push:
-    branches:
-      - master
-  workflow_dispatch:
-  
-env:
-  PACKAGE_NAME: livepeer
-  
+    tags:
+      - v*
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: '1.17'
-      - name: Install dependencies
+
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential debhelper fakeroot git devscripts
-      - name: Set Git user info
+
+      - name: Set up GPG key
         run: |
-          git config --global user.email "GITHUB_ACTIONS@raf.sundara.tv"
-          git config --global user.name "Sundara.eth"
+          gpg --import "${{ secrets.GPG_PRIVATE_KEY }}"
+          echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --passphrase-fd 0 --pinentry-mode loopback --for-your-eyes-only --import-options import-show --import
+
       - name: Create changelog entry
         run: |
-          export DEBEMAIL="GITHUB_ACTIONS@raf.sundara.tv"
-          echo "Updating changelog for ${{ github.ref }} release."
-          UPSTREAM_URL="https://github.com/livepeer/go-livepeer"
-          LATEST_RELEASE=$(curl --silent "${UPSTREAM_URL}/releases/latest" | sed 's#.*tag/\(.*\)\".*#\1#')
-           echo -e "\n\nlivepeer (${{ github.ref }}) unstable; urgency=medium\n\n* New upstream release. See ${UPSTREAM_URL}/releases/tag/${LATEST_RELEASE}.\n\n -- GITHUB ACTIONS BOT <ci@mydomain.com>  $(date -R)\n" > debian/changelog
-          git add debian/changelog
-          git commit -m "Update changelog for ${{ github.ref }} release"
-          git push
-      - name: Build Debian Package
+          export DEBEMAIL="ci@mydomain.com"
+          echo "livepeer (${{ github.ref }}) unstable; urgency=medium" > debian/changelog
+          echo -e "\n* New upstream release. See https://github.com/livepeer/go-livepeer/releases/tag/${{ github.ref }}.\n\n -- GITHUB ACTIONS BOT <ci@mydomain.com>  $(date -R)\n" >> debian/changelog
+
+      - name: Build package
         run: |
-          dpkg-buildpackage -b -us -uc
-      - name: Upload package to GitHub releases
-        uses: actions/upload-release-asset@v1
+          debuild -b -us -uc
+
+      - name: Publish package
+        uses: softprops/action-gh-release@v1
         with:
-          asset_path: |
-            ../${PACKAGE_NAME}_*.deb
-            ../${PACKAGE_NAME}_*.deb.asc
-            ../${PACKAGE_NAME}_*.dsc
-            ../${PACKAGE_NAME}_*.tar.xz
-            ../${PACKAGE_NAME}_*.buildinfo
-          name: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
-          label: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
-          mime_type: application/octet-stream
+          name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref }}
+          body: "Release ${{ github.ref }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
