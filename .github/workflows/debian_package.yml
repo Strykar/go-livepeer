@@ -25,17 +25,13 @@ jobs:
           sudo apt-get install -y build-essential debhelper fakeroot git
       - name: Create changelog entry
         run: |
-          export DEBEMAIL="ci@raf.sundara.tv"
-          export DEBFULLNAME="GITHUB ACTIONS BOT"
-          git fetch --tags
-          PREV_TAG=$(git describe --tags --abbrev=0)
-          NEXT_TAG=$(echo $PREV_TAG | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-          debchange --newversion $NEXT_TAG --distribution unstable "New upstream release."
+          export DEBEMAIL="ci@mydomain.com"
+          export DEBFULLNAME="GitHub Actions Bot"
+          VERSION=$(date +"%Y%m%d%H%M%S")
+          debchange --newversion $VERSION --distribution unstable "New upstream release."
       - name: Build Debian Package
         run: |
-          dpkg-buildpackage -b -us -uc -aamd64
-        env:
-          DEB_BUILD_OPTIONS: "nocheck"
+          dpkg-buildpackage -b -us -uc
       - name: Upload package to GitHub releases
         uses: actions/upload-release-asset@v1
         with:
