@@ -1,9 +1,10 @@
 name: Build Debian Package
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
+    push:
+      tags:
+        - '*'
 
 env:
   PACKAGE_NAME: livepeer
