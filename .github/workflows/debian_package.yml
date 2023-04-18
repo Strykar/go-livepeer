@@ -12,12 +12,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          ref: ${{ github.ref }}
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential devscripts debhelper dh-systemd
+          sudo apt-get install -y build-essential debhelper
       - name: Build Debian package
         run: make deb
       - name: Calculate SHA256 and SHA512 checksums
