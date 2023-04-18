@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential debhelper dh-systemd fakeroot git
+          sudo apt-get install -y build-essential debhelper fakeroot git
       - name: Create changelog entry
         run: |
           export DEBEMAIL="your-email@domain.com"
