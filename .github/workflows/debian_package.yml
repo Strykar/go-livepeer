@@ -23,9 +23,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential debhelper fakeroot git devscripts
+      - name: Set Git user info
+        run: |
+          git config --global user.email "GITHUB_ACTIONS@raf.sundara.tv"
+          git config --global user.name "Sundara.eth"
       - name: Create changelog entry
         run: |
-          export DEBEMAIL="ci@raf.sundara.tv"
+          export DEBEMAIL="GITHUB_ACTIONS@raf.sundara.tv"
           echo "Updating changelog for ${{ github.ref }} release."
           UPSTREAM_URL="https://github.com/livepeer/go-livepeer"
           LATEST_RELEASE=$(curl --silent "${UPSTREAM_URL}/releases/latest" | sed 's#.*tag/\(.*\)\".*#\1#')
