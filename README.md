@@ -9,6 +9,7 @@
 [![Discord](https://img.shields.io/discord/423160867534929930.svg?style=flat-square)](https://discord.gg/7wRSUGX)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.md)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg?style=flat-square)](CONTRIBUTING.md)
+[![Build Debian package for Livepeer](https://github.com/Strykar/go-livepeer/actions/workflows/build-deb-package.yml/badge.svg?branch=master)](https://github.com/Strykar/go-livepeer/actions/workflows/build-deb-package.yml)
 
 The Livepeer project aims to deliver a live video-streaming network protocol
 that is fully decentralized, highly scalable and crypto-token incentivized to
