@@ -8,7 +8,6 @@ on:
 
 env:
   PACKAGE_NAME: livepeer
-  PACKAGE_VERSION: ${{ steps.get_tag.outputs.tag_name }}
 
 jobs:
   build:
@@ -30,6 +29,8 @@ jobs:
               repo: context.repo.repo
             });
             console.log(resp.data.tag_name);
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -37,15 +38,17 @@ jobs:
       - name: Build Debian Package
         run: |
           dpkg-buildpackage -b -us -uc
+        env:
+          PACKAGE_VERSION: ${{ steps.get_tag.outputs.tag_name }}
       - name: Upload package to GitHub releases
         uses: actions/upload-release-asset@v1
         with:
           asset_path: |
-            ../${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
-            ../${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb.asc
-            ../${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}.dsc
-            ../${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}.tar.xz
-            ../${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.buildinfo
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb.asc
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}.dsc
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}.tar.xz
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.buildinfo
           name: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
           label: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
           mime_type: application/octet-stream
