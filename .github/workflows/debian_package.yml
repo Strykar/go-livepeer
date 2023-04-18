@@ -8,6 +8,7 @@ on:
 
 env:
   PACKAGE_NAME: livepeer
+  PACKAGE_VERSION: ${{ github.ref_name }}
 
 jobs:
   build:
@@ -28,9 +29,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo
             });
-            console.log(resp.data.tag_name);
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            console.log(resp.data.tag_name || context.ref.replace('refs/tags/', ''));
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -38,8 +37,6 @@ jobs:
       - name: Build Debian Package
         run: |
           dpkg-buildpackage -b -us -uc
-        env:
-          PACKAGE_VERSION: ${{ steps.get_tag.outputs.tag_name }}
       - name: Upload package to GitHub releases
         uses: actions/upload-release-asset@v1
         with:
