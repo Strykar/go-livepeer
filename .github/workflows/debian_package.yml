@@ -1,58 +1,68 @@
-name: Debian Package
+name: Build Debian package for Livepeer
 
 on:
   workflow_dispatch:
-    inputs:
-      livepeer_release_url:
-        description: 'Livepeer Release URL'
-        required: true
+    release:
+      types: [published]
 
 jobs:
-  build_deb_package:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Set up GnuPG
-        run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --import
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-
-      - name: Install dependencies
-        run: sudo apt-get install -y debhelper devscripts equivs
-
-      - name: Download and verify livepeer-linux-amd64.tar.gz
-        run: |
-          wget "${{ github.event.inputs.livepeer_release_url }}/livepeer-linux-amd64.tar.gz"
-          wget "${{ github.event.inputs.livepeer_release_url }}/livepeer-linux-amd64.tar.gz.sig"
-          gpg --verify livepeer-linux-amd64.tar.gz.sig livepeer-linux-amd64.tar.gz
-
-      - name: Build Debian package
-        run: |
-          # Build the Debian package here, assuming you have a "debian" directory in your repo containing necessary files
-          dpkg-buildpackage -us -uc
-
-      - name: Sign Debian package
-        run: |
-          debsigs --sign=origin -k $GPG_KEY_ID *.deb
-        env:
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-
-      - name: Check package size
-        id: check_size
-        run: |
-          SIZE=$(stat -c %s *.deb)
-          echo "::set-output name=size::$SIZE"
-          if [ "$SIZE" -gt 199000000 ]; then
-            echo "Package size exceeds 199 MB, aborting."
-            exit 1
-          fi
-
-      - name: Upload Debian package
-        if: steps.check_size.outputs.size <= 199000000
-        uses: actions/upload-artifact@v2
         with:
-          name: livepeer-deb
-          path: ./*.deb
+          ref: ${{ github.ref }}
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential devscripts debhelper dh-systemd
+      - name: Build Debian package
+        run: make deb
+      - name: Calculate SHA256 and SHA512 checksums
+        id: hash
+        run: |
+          echo "sha256 $(sha256sum *.deb | awk '{ print $1 " " $2 }')" > sha256sums.txt
+          echo "sha512 $(sha512sum *.deb | awk '{ print $1 " " $2 }')" > sha512sums.txt
+      - name: Sign package
+        run: |
+          gpg --import ${{ secrets.GPG_PRIVATE_KEY }}
+          deb_files=(*.deb)
+          for deb_file in "${deb_files[@]}"; do
+            gpg --batch --yes --detach-sign --armor "$deb_file"
+          done
+      - name: Upload package to GitHub releases
+        uses: actions/upload-release-asset@v1
+        with:
+          asset_path: |
+            *.deb
+            *.deb.asc
+            sha256sums.txt
+            sha512sums.txt
+          name: ${{ env.PACKAGE_NAME }}
+          label: ${{ env.PACKAGE_NAME }}
+          mime_type: application/octet-stream
+        env:
+          PACKAGE_NAME: livepeer
+      - name: Add package to APT repository
+        run: |
+          reprepro includedeb stable *.deb
+      - name: Update Release file
+        run: |
+          cd dists/stable
+          echo "Origin: Livepeer" > Release
+          echo "Label: Livepeer" >> Release
+          echo "Suite: stable" >> Release
+          echo "Version: 1.0" >> Release
+          echo "Codename: livepeer" >> Release
+          echo "Date: $(date -u "+%a, %d %b %Y %H:%M:%S GMT")" >> Release
+          echo "Architectures: amd64" >> Release
+          echo "Components: main" >> Release
+          echo "Description: Livepeer Debian package repository" >> Release
+          echo "SHA256:" >> Release
+          cat ../../sha256sums.txt | awk '{ print " "$1,"'"$(du -b {} | awk '{ print $1 }')" "main/binary-amd64/"$2 }' >> Release
+          echo "SHA512:" >> Release
+          cat ../../sha512sums.txt | awk '{ print " "$1,"'"$(du -b {} | awk '{ print $1 }')" "main/binary-amd64/"$2 }' >> Release
+          gpg --default-key ${{ secrets.GPG_KEY_ID }} --output Release.gpg --detach-sign --armor Release
+        shell: bash
+
