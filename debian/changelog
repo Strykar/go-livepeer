@@ -1,5 +1,16 @@
+<<<<<<< HEAD
 livepeer (0.5.38-1) unstable; urgency=medium
 
   * New upstream release. See https://github.com/livepeer/go-livepeer/releases/tag/v0.5.38.
 
  -- GITHUB ACTIONS BOT <ci@raf.sundara.tv>  Tue, 18 Apr 2023 13:42:54 +0000
+=======
+
+
+livepeer (refs/heads/master) unstable; urgency=medium
+
+* New upstream release. See https://github.com/livepeer/go-livepeer/releases/tag/.
+
+ -- GITHUB ACTIONS BOT <ci@mydomain.com>  Tue, 18 Apr 2023 13:42:54 +0000
+
+>>>>>>> e973a8e5408fa4588021a8ed9a9f4a4f54039994
