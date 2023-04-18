@@ -1,14 +1,14 @@
 name: Build Debian Package
-
+  
 on:
   push:
     branches:
       - master
   workflow_dispatch:
-
+  
 env:
   PACKAGE_NAME: livepeer
-
+  
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,9 +26,7 @@ jobs:
       - name: Create changelog entry
         run: |
           export DEBEMAIL="ci@mydomain.com"
-          export DEBFULLNAME="GitHub Actions Bot"
-          VERSION=$(date +"%Y%m%d%H%M%S")
-          debchange --newversion $VERSION --distribution unstable "New upstream release."
+          debchange --newversion ${{ github.ref }} --distribution unstable --create "New upstream release."
       - name: Build Debian Package
         run: |
           dpkg-buildpackage -b -us -uc
