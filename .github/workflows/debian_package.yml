@@ -1,4 +1,4 @@
-name: Debian Package
+name: Build Debian Package
 
 on:
   push:
@@ -6,29 +6,47 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  PACKAGE_NAME: livepeer
+  PACKAGE_VERSION: ${{ steps.get_tag.outputs.tag_name }}
+
 jobs:
-  build-deb-package:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+      - name: Get release tag name
+        id: get_tag
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const resp = await github.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            console.log(resp.data.tag_name);
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential debhelper devscripts fakeroot lintian
-      - name: Build Debian package
+          sudo apt-get install -y build-essential debhelper dh-systemd fakeroot
+      - name: Build Debian Package
         run: |
           dpkg-buildpackage -b -us -uc
       - name: Upload package to GitHub releases
         uses: actions/upload-release-asset@v1
         with:
           asset_path: |
-            ../*.deb
-            ../*.dsc
-            ../*.tar.xz
-            ../*.changes
-          name: ${{ env.PACKAGE_NAME }}
-          label: ${{ env.PACKAGE_NAME }}
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb.asc
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}.dsc
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}.tar.xz
+            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.buildinfo
+          name: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
+          label: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
           mime_type: application/octet-stream
-        env:
-          PACKAGE_NAME: livepeer
+
