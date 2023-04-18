@@ -25,8 +25,14 @@ jobs:
           sudo apt-get install -y build-essential debhelper fakeroot git devscripts
       - name: Create changelog entry
         run: |
-          export DEBEMAIL="ci@mydomain.com"
-          debchange --newversion ${{ github.ref }} --distribution unstable --create "New upstream release."
+          export DEBEMAIL="ci@raf.sundara.tv"
+          echo "Updating changelog for ${{ github.ref }} release."
+          UPSTREAM_URL="https://github.com/livepeer/go-livepeer"
+          LATEST_RELEASE=$(curl --silent "${UPSTREAM_URL}/releases/latest" | sed 's#.*tag/\(.*\)\".*#\1#')
+           echo -e "\n\nlivepeer (${{ github.ref }}) unstable; urgency=medium\n\n* New upstream release. See ${UPSTREAM_URL}/releases/tag/${LATEST_RELEASE}.\n\n -- GITHUB ACTIONS BOT <ci@mydomain.com>  $(date -R)\n" > debian/changelog
+          git add debian/changelog
+          git commit -m "Update changelog for ${{ github.ref }} release"
+          git push
       - name: Build Debian Package
         run: |
           dpkg-buildpackage -b -us -uc
