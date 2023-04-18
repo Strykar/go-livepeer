@@ -39,4 +39,4 @@ jobs:
 
       - name: Build package
         run: |
-          debuild -b -us -uc
+          dpkg-buildpackage -b -us -uc --host-arch=amd64
