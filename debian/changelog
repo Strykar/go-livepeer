@@ -1,0 +1,5 @@
+livepeer (0.5.38-1) unstable; urgency=medium
+
+  * New upstream release. See https://github.com/livepeer/go-livepeer/releases/tag/v0.5.38.
+
+ -- GITHUB ACTIONS BOT <ci@raf.sundara.tv>  Tue, 18 Apr 2023 13:42:54 +0000
