@@ -8,7 +8,6 @@ on:
 
 env:
   PACKAGE_NAME: livepeer
-  PACKAGE_VERSION: ${{ github.ref_name }}
 
 jobs:
   build:
@@ -20,20 +19,18 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.17'
-      - name: Get release tag name
-        id: get_tag
-        uses: actions/github-script@v4
-        with:
-          script: |
-            const resp = await github.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            console.log(resp.data.tag_name || context.ref.replace('refs/tags/', ''));
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential debhelper fakeroot
+          sudo apt-get install -y build-essential debhelper dh-systemd fakeroot git
+      - name: Create changelog entry
+        run: |
+          export DEBEMAIL="your-email@domain.com"
+          export DEBFULLNAME="Your Name"
+          git fetch --tags
+          PREV_TAG=$(git describe --tags --abbrev=0)
+          NEXT_TAG=$(echo $PREV_TAG | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+          debchange --newversion $NEXT_TAG --distribution unstable "New upstream release."
       - name: Build Debian Package
         run: |
           dpkg-buildpackage -b -us -uc
@@ -41,11 +38,11 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           asset_path: |
-            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb
-            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.deb.asc
-            ../${PACKAGE_NAME}_${PACKAGE_VERSION}.dsc
-            ../${PACKAGE_NAME}_${PACKAGE_VERSION}.tar.xz
-            ../${PACKAGE_NAME}_${PACKAGE_VERSION}_amd64.buildinfo
-          name: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
-          label: ${{ env.PACKAGE_NAME }}_${{ env.PACKAGE_VERSION }}_amd64.deb
+            ../${PACKAGE_NAME}_*.deb
+            ../${PACKAGE_NAME}_*.deb.asc
+            ../${PACKAGE_NAME}_*.dsc
+            ../${PACKAGE_NAME}_*.tar.xz
+            ../${PACKAGE_NAME}_*.buildinfo
+          name: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
+          label: ${{ env.PACKAGE_NAME }}_${{ github.ref }}_amd64.deb
           mime_type: application/octet-stream
