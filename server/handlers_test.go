@@ -2012,10 +2012,14 @@ func TestSetRewardCallerHandler(t *testing.T) {
 			wantSet:    &ethcommon.Address{},
 		},
 		{
-			name:       "missing param unsets via the zero address",
+			name:       "missing param is rejected rather than unsetting",
 			form:       url.Values{},
-			wantStatus: http.StatusOK,
-			wantSet:    &ethcommon.Address{},
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "misspelled param is rejected rather than unsetting",
+			form:       url.Values{"rewardcaller": {caller.Hex()}},
+			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name:       "rejects a malformed address",

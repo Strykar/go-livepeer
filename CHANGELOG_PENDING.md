@@ -24,4 +24,5 @@
 
 #### CLI
 
+- [#4011](https://github.com/livepeer/go-livepeer/pull/4011) Require the `rewardCaller` param on `/setRewardCaller` so a missing or misspelled param cannot silently revoke (@Strykar)
 - [#4011](https://github.com/livepeer/go-livepeer/pull/4011) Reject reward caller addresses that fail their EIP-55 checksum (@Strykar)

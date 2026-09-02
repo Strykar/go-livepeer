@@ -1162,9 +1162,19 @@ func (s *LivepeerServer) rewardHandler(client eth.LivepeerEthClient) http.Handle
 }
 
 // setRewardCallerHandler authorizes an address to call reward on behalf of this node's
-// account (LIP-118). An empty rewardCaller param unsets any existing authorization.
+// account (LIP-118). An empty rewardCaller param unsets any existing authorization,
+// but the param itself must be present so a typo cannot revoke by accident.
 func (s *LivepeerServer) setRewardCallerHandler(client eth.LivepeerEthClient) http.Handler {
 	return mustHaveClient(client, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			respond500(w, fmt.Sprintf("parse form error: %v", err))
+			return
+		}
+		if _, ok := r.PostForm["rewardCaller"]; !ok {
+			respond400(w, "missing form param: rewardCaller (send it empty to unset)")
+			return
+		}
+
 		var rewardCaller ethcommon.Address
 		if v := strings.TrimSpace(r.PostFormValue("rewardCaller")); v != "" {
 			if !ethcommon.IsHexAddress(v) {
