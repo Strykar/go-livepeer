@@ -1991,6 +1991,7 @@ func trim(str []byte) string {
 
 func TestSetRewardCallerHandler(t *testing.T) {
 	caller := ethcommon.HexToAddress("0x3333333333333333333333333333333333333333")
+	lowerCaller := ethcommon.HexToAddress("0x525419ff5707190389bfb5c87c375d710f5fcb0e")
 
 	tests := []struct {
 		name       string
@@ -2020,6 +2021,17 @@ func TestSetRewardCallerHandler(t *testing.T) {
 			name:       "rejects a malformed address",
 			form:       url.Values{"rewardCaller": {"not-an-address"}},
 			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "rejects a mixed-case address with a bad checksum",
+			form:       url.Values{"rewardCaller": {"0x525419fF5707190389bfb5C87c375D710F5fCb0E"}},
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "accepts an all-lowercase address, which carries no checksum",
+			form:       url.Values{"rewardCaller": {"0x525419ff5707190389bfb5c87c375d710f5fcb0e"}},
+			wantStatus: http.StatusOK,
+			wantSet:    &lowerCaller,
 		},
 	}
 

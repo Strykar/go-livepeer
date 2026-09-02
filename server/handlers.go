@@ -1171,6 +1171,10 @@ func (s *LivepeerServer) setRewardCallerHandler(client eth.LivepeerEthClient) ht
 				respond400(w, fmt.Sprintf("invalid reward caller address %v", v))
 				return
 			}
+			if !common.ValidChecksumAddress(v) {
+				respond400(w, fmt.Sprintf("reward caller address %v fails its EIP-55 checksum", v))
+				return
+			}
 			rewardCaller = ethcommon.HexToAddress(v)
 		}
 

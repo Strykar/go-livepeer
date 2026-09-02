@@ -23,3 +23,5 @@
 #### Broadcaster
 
 #### CLI
+
+- [#4011](https://github.com/livepeer/go-livepeer/pull/4011) Reject reward caller addresses that fail their EIP-55 checksum (@Strykar)

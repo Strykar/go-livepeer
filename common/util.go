@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/gpu"
@@ -522,4 +523,20 @@ func AppendHostname(urlPath string, host string) (*url.URL, error) {
 		}
 		return u, nil
 	}
+}
+
+// ValidChecksumAddress reports whether addr is a hex address whose EIP-55
+// checksum holds. An address written in a single case carries no checksum
+// information, so it passes; only a mixed-case address is checked.
+func ValidChecksumAddress(addr string) bool {
+	if !ethcommon.IsHexAddress(addr) {
+		return false
+	}
+	body := strings.TrimPrefix(strings.TrimPrefix(addr, "0x"), "0X")
+	if body == strings.ToLower(body) || body == strings.ToUpper(body) {
+		return true
+	}
+	// Compare on the body. Hex() always emits a lowercase 0x prefix, so
+	// comparing the whole string would reject a valid 0X-prefixed address.
+	return "0x"+body == ethcommon.HexToAddress(addr).Hex()
 }

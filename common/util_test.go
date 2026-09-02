@@ -476,3 +476,23 @@ func TestMimeTypeToExtension(t *testing.T) {
 	_, err := MimeTypeToExtension(invalidContentType)
 	assert.Equal(ErrNoExtensionsForType, err)
 }
+
+func TestValidChecksumAddress(t *testing.T) {
+	assert := assert.New(t)
+
+	// canonical EIP-55 form
+	assert.True(ValidChecksumAddress("0x525419FF5707190389bfb5C87c375D710F5fCb0E"))
+	// single case carries no checksum, so it is accepted
+	assert.True(ValidChecksumAddress("0x525419ff5707190389bfb5c87c375d710f5fcb0e"))
+	assert.True(ValidChecksumAddress("0X525419FF5707190389BFB5C87C375D710F5FCB0E"))
+	// mixed case behind an uppercase 0X prefix still has to reach the comparison
+	assert.True(ValidChecksumAddress("0X525419FF5707190389bfb5C87c375D710F5fCb0E"))
+	assert.False(ValidChecksumAddress("0X525419fF5707190389bfb5C87c375D710F5fCb0E"))
+	// digits only, no case information to check
+	assert.True(ValidChecksumAddress("0x3333333333333333333333333333333333333333"))
+	// mixed case that is not the checksummed form
+	assert.False(ValidChecksumAddress("0x525419fF5707190389bfb5C87c375D710F5fCb0E"))
+	// not an address at all
+	assert.False(ValidChecksumAddress("not-an-address"))
+	assert.False(ValidChecksumAddress(""))
+}
